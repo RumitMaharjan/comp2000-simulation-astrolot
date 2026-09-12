@@ -33,4 +33,19 @@ public class Grid<T extends Cell> {
     public T getCell(int x, int y){
         return cells[y][x];
     }
+
+    private int countLiveNeighbours(int x, int y){
+        int count = 0;
+
+        for(int dy = -1; dy<=1; dy++){
+            for(int dx = -1; dx<=1; dx++){
+                if(dy == 0 && dx == 0) continue;
+                int nx = Math.floorMod(x+dx, width);
+                int ny = Math.floorMod(y+dy, height);
+                if(cells[ny][nx].isAlive()) count++;
+            }
+        }
+
+        return count;
+    }
 }
