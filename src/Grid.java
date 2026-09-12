@@ -85,4 +85,21 @@ public class Grid<T extends Cell> {
             }
         }
     }
+
+    public void clear(){
+        for(int y = 0; y<height; y++){
+            for(int x = 0; x<width; x++){
+                cells[y][x] = factory.create(false);
+            }
+        }
+    }
+
+    public void randomize(double liveProbability ){
+        Random rng = new Random();
+        for(int y = 0; y<height; y++){
+            for(int x = 0; x<width; x++){
+                cells[y][x] = factory.create(rng.nextDouble() < liveProbability);
+            }
+        }
+    }
 }
