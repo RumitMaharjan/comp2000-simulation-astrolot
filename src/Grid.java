@@ -34,6 +34,13 @@ public class Grid<T extends Cell> {
         return cells[y][x];
     }
 
+    public void setAlive(int x, int y, boolean alive) throws InvalidDimensionException{
+        if(x<0 || x>=width || y<0 || y>=height){
+            throw new InvalidDimensionException("The  cell is out of bound!");
+        }
+        cells[y][x] = factory.create(alive);
+    }
+
     private int countLiveNeighbours(int x, int y){
         int count = 0;
 
