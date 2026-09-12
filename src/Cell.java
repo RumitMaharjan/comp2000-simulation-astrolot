@@ -10,4 +10,6 @@ public abstract class  Cell {
     }
 
     public abstract boolean nextState(int liveNeighbours);
+
+    public void commit(boolean willBeAlive){this.alive = willBeAlive;}
 }

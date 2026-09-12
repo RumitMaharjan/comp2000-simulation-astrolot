@@ -48,4 +48,20 @@ public class Grid<T extends Cell> {
 
         return count;
     }
+
+    public void step(){
+        boolean[][] nextAlive = new boolean[height][width];
+
+        for(int y = 0; y<height; y++){
+            for(int x = 0; x<width; x++){
+                nextAlive[y][x] = cells[y][x].nextState(countLiveNeighbours(x, y));
+            }
+        }
+
+        for(int y = 0; y<height; y++){
+            for(int x = 0; x<width; x++){
+                cells[y][x].commit(nextAlive[y][x]);
+            }
+        }
+    }
 }
