@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Grid<T extends Cell> {
     private  final int width;
     private  final int height;
@@ -22,6 +24,18 @@ public class Grid<T extends Cell> {
         for(int i = 0; i<height; i++){
             for(int j = 0; j<width; j++){
                 cells[i][j] = factory.create(false);
+            }
+        }
+    }
+
+    public Grid(int width, int height, CellFactory<T> factory, double liveProbability) throws InvalidDimensionException{
+        this(width, height, factory);
+        Random rng = new Random();
+        for(int y = 0; y<height; y++){
+            for(int x = 0; x<width; x++){
+                if(rng.nextDouble()<liveProbability){
+                    setAlive(x, y, true);
+                }
             }
         }
     }
