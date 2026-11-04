@@ -6,7 +6,7 @@ public class Main {
         try{
             int width = 60, height = 40, cellSize = 12;
 
-            Grid<HighLifeCell> grid = new Grid<>(width, height, HighLifeCell::new, 0.2);
+            Grid grid = new Grid(width, height, Rules.HIGHLIFE, 0.2);
 
             grid.setAlive(1, 0, true);
             grid.setAlive(2, 1, true);

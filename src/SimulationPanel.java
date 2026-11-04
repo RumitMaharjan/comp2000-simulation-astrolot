@@ -4,11 +4,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class SimulationPanel extends JPanel {
-    private final Grid<? extends Cell> grid;
+    private final Grid grid;
     private final int cellSize;
     private int dragStartX, dragStartY;
 
-    public SimulationPanel(Grid<? extends Cell> grid, int cellSize){
+    public SimulationPanel(Grid grid, int cellSize){
         this.grid = grid;
         this.cellSize = cellSize;
         setPreferredSize(new java.awt.Dimension(
@@ -54,7 +54,7 @@ public class SimulationPanel extends JPanel {
         g.setColor(new Color(30, 30, 30));
         for(int y = 0; y<grid.getHeight(); y++){
             for(int x = 0; x<grid.getWidth(); x++){
-                if(grid.getCell(x, y).isAlive()){
+                if(grid.isAlive(x, y)){
                     g.fillRect(x*cellSize, y*cellSize, cellSize-1, cellSize-1);
                 }
             }
