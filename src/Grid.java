@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.stream.IntStream;
 
 public class Grid{
     private  final int width;
@@ -64,15 +65,15 @@ public class Grid{
     }
 
     public void step(){
-        boolean[][] next = new boolean[height][width];
-
-        for(int y = 0; y<height; y++){
-            for(int x = 0; x<width; x++){
-                next[y][x] = rule.next(cells[y][x], countLiveNeighbours(x, y));
-            }
-        }
-
-        cells = next;
+        cells = IntStream.range(0, height)
+                .mapToObj(y->{
+                    boolean[] row = new boolean[width];
+                    for(int x = 0; x<width; x++){
+                        row[x] = rule.next(cells[y][x], countLiveNeighbours(x, y));
+                    }
+                    return row;
+                })
+                .toArray(boolean[][]::new);
     }
 
     public void clear(){
@@ -81,6 +82,20 @@ public class Grid{
                 cells[y][x] = false;
             }
         }
+    }
+
+    public long countAlive(){
+        return IntStream.range(0, height)
+                .mapToLong(y->{
+                    int count = 0;
+                    for(int x = 0; x<width; x++){
+                        if(cells[y][x]) {
+                            count++;
+                        }
+                    }
+                    return count;
+                })
+                .sum();
     }
 
     public void randomize(double liveProbability ){
