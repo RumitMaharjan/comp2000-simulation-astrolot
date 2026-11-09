@@ -43,7 +43,7 @@ public class SimulationPanel extends JPanel {
                     }
                 }
 
-                repaint();
+                grid.notifyListeners();
             }
         });
     }

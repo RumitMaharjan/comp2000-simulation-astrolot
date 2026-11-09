@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -8,6 +10,10 @@ public class Grid{
     private boolean[][] cells;
 
     private Rule rule;
+
+    private int generation = 0;
+
+    private final List<GridListener> listeners = new ArrayList<>();
 
     public Grid(int width, int height, Rule rule) throws InvalidDimensionException{
         if(width <=0 || height<=0){
@@ -65,6 +71,7 @@ public class Grid{
     }
 
     public void step(){
+        generation++;
         cells = IntStream.range(0, height)
                 .mapToObj(y->{
                     boolean[] row = new boolean[width];
@@ -74,9 +81,11 @@ public class Grid{
                     return row;
                 })
                 .toArray(boolean[][]::new);
+        notifyListeners();
     }
 
     public void stepParallel(){
+        generation++;
         cells = IntStream.range(0, height).parallel()
                 .mapToObj(y->{
                     boolean[] row = new boolean[width];
@@ -86,14 +95,17 @@ public class Grid{
                     return row;
                 })
                 .toArray(boolean[][]::new);
+        notifyListeners();
     }
 
     public void clear(){
+        generation = 0;
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
                 cells[y][x] = false;
             }
         }
+        notifyListeners();
     }
 
     public long countAlive(){
@@ -110,12 +122,28 @@ public class Grid{
                 .sum();
     }
 
+    public void addListener(GridListener l){
+        listeners.add(l);
+    }
+    
+    public void notifyListeners(){
+        for (GridListener listener : listeners) {
+            listener.gridChanged(this);
+        }
+    }
+
+    public int getGeneration(){
+        return generation;
+    }
+
     public void randomize(double liveProbability ){
+        generation = 0;
         Random rng = new Random();
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
                 cells[y][x] = rng.nextDouble() < liveProbability;
             }
         }
+        notifyListeners();
     }
 }
