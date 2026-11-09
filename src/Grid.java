@@ -76,6 +76,18 @@ public class Grid{
                 .toArray(boolean[][]::new);
     }
 
+    public void stepParallel(){
+        cells = IntStream.range(0, height).parallel()
+                .mapToObj(y->{
+                    boolean[] row = new boolean[width];
+                    for(int x = 0; x<width; x++){
+                        row[x] = rule.next(cells[y][x], countLiveNeighbours(x, y));
+                    }
+                    return row;
+                })
+                .toArray(boolean[][]::new);
+    }
+
     public void clear(){
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
