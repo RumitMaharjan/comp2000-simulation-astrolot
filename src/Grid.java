@@ -1,15 +1,21 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
-public class Grid<T extends Cell> {
+public class Grid{
     private  final int width;
     private  final int height;
 
-    private final CellFactory<T> factory;
+    private boolean[][] cells;
 
-    private final T[][] cells;
+    private Rule rule;
 
-    @SuppressWarnings("unchecked")
-    public Grid(int width, int height, CellFactory<T> factory) throws InvalidDimensionException{
+    private int generation = 0;
+
+    private final List<GridListener> listeners = new ArrayList<>();
+
+    public Grid(int width, int height, Rule rule) throws InvalidDimensionException{
         if(width <=0 || height<=0){
             throw new InvalidDimensionException(
                 "The dimensions of the grid must be greater than 0!"
@@ -17,19 +23,13 @@ public class Grid<T extends Cell> {
         }
         this.width = width;
         this.height = height;
-        this.factory = factory;
+        this.rule = rule;
 
-        this.cells =  (T[][]) new Cell[this.height][this.width];
-
-        for(int i = 0; i<height; i++){
-            for(int j = 0; j<width; j++){
-                cells[i][j] = factory.create(false);
-            }
-        }
+        cells = new boolean[height][width];
     }
 
-    public Grid(int width, int height, CellFactory<T> factory, double liveProbability) throws InvalidDimensionException{
-        this(width, height, factory);
+    public Grid(int width, int height, Rule rule, double liveProbability) throws InvalidDimensionException{
+        this(width, height, rule);
         Random rng = new Random();
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
@@ -44,15 +44,15 @@ public class Grid<T extends Cell> {
 
     public int getHeight(){return height;}
 
-    public T getCell(int x, int y){
-        return cells[y][x];
-    }
-
     public void setAlive(int x, int y, boolean alive) throws InvalidDimensionException{
         if(x<0 || x>=width || y<0 || y>=height){
             throw new InvalidDimensionException("The  cell is out of bound!");
         }
-        cells[y][x] = factory.create(alive);
+        cells[y][x] = alive;
+    }
+
+    public boolean isAlive(int x, int y){
+        return cells[y][x];
     }
 
     private int countLiveNeighbours(int x, int y){
@@ -63,7 +63,7 @@ public class Grid<T extends Cell> {
                 if(dy == 0 && dx == 0) continue;
                 int nx = Math.floorMod(x+dx, width);
                 int ny = Math.floorMod(y+dy, height);
-                if(cells[ny][nx].isAlive()) count++;
+                if(cells[ny][nx]) count++;
             }
         }
 
@@ -71,35 +71,79 @@ public class Grid<T extends Cell> {
     }
 
     public void step(){
-        boolean[][] nextAlive = new boolean[height][width];
+        generation++;
+        cells = IntStream.range(0, height)
+                .mapToObj(y->{
+                    boolean[] row = new boolean[width];
+                    for(int x = 0; x<width; x++){
+                        row[x] = rule.next(cells[y][x], countLiveNeighbours(x, y));
+                    }
+                    return row;
+                })
+                .toArray(boolean[][]::new);
+        notifyListeners();
+    }
 
-        for(int y = 0; y<height; y++){
-            for(int x = 0; x<width; x++){
-                nextAlive[y][x] = cells[y][x].nextState(countLiveNeighbours(x, y));
-            }
-        }
-
-        for(int y = 0; y<height; y++){
-            for(int x = 0; x<width; x++){
-                cells[y][x].commit(nextAlive[y][x]);
-            }
-        }
+    public void stepParallel(){
+        generation++;
+        cells = IntStream.range(0, height).parallel()
+                .mapToObj(y->{
+                    boolean[] row = new boolean[width];
+                    for(int x = 0; x<width; x++){
+                        row[x] = rule.next(cells[y][x], countLiveNeighbours(x, y));
+                    }
+                    return row;
+                })
+                .toArray(boolean[][]::new);
+        notifyListeners();
     }
 
     public void clear(){
+        generation = 0;
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
-                cells[y][x] = factory.create(false);
+                cells[y][x] = false;
             }
+        }
+        notifyListeners();
+    }
+
+    public long countAlive(){
+        return IntStream.range(0, height)
+                .mapToLong(y->{
+                    int count = 0;
+                    for(int x = 0; x<width; x++){
+                        if(cells[y][x]) {
+                            count++;
+                        }
+                    }
+                    return count;
+                })
+                .sum();
+    }
+
+    public void addListener(GridListener l){
+        listeners.add(l);
+    }
+    
+    public void notifyListeners(){
+        for (GridListener listener : listeners) {
+            listener.gridChanged(this);
         }
     }
 
+    public int getGeneration(){
+        return generation;
+    }
+
     public void randomize(double liveProbability ){
+        generation = 0;
         Random rng = new Random();
         for(int y = 0; y<height; y++){
             for(int x = 0; x<width; x++){
-                cells[y][x] = factory.create(rng.nextDouble() < liveProbability);
+                cells[y][x] = rng.nextDouble() < liveProbability;
             }
         }
+        notifyListeners();
     }
 }

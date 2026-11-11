@@ -6,7 +6,7 @@ public class Main {
         try{
             int width = 60, height = 40, cellSize = 12;
 
-            Grid<HighLifeCell> grid = new Grid<>(width, height, HighLifeCell::new, 0.2);
+            Grid grid = new Grid(width, height, Rules.HIGHLIFE, 0.2);
 
             grid.setAlive(1, 0, true);
             grid.setAlive(2, 1, true);
@@ -23,19 +23,23 @@ public class Main {
             JButton clearButton = new JButton("Clear");
             JButton pauseButton = new JButton("Pause");
             JButton startButton = new JButton("Start");
+            JLabel stats = new JLabel();
+
             resetButton.addActionListener(e->{
                 grid.randomize(0.2);
-                panel.repaint();
             });
             clearButton.addActionListener(e->{
                 grid.clear();
-                panel.repaint();
             });
 
             Timer timer = new Timer(120, e->{
                 grid.step();
-                panel.repaint();
             });
+
+            grid.addListener(g->panel.repaint());
+
+            grid.addListener(g->  stats.setText("Generation: " + g.getGeneration() + "   Alive: " + g.countAlive())
+            );
 
             pauseButton.addActionListener(e->{
                timer.stop();
@@ -55,6 +59,7 @@ public class Main {
 
             frame.add(panel, BorderLayout.CENTER);
             frame.add(controls, BorderLayout.SOUTH);
+            frame.add(stats, BorderLayout.NORTH);
 
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.pack();
